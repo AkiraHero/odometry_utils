@@ -4,8 +4,12 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <sstream>
+#include <cassert>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <Eigen/Core>
+
 
 class KittiHelper {
 
@@ -40,6 +44,73 @@ public:
         return laser_cloud;
     }
 
+    static std::vector<Eigen::Matrix4f> read_pose_file(std::string pose_file) {
+        std::vector<Eigen::Matrix4f> result;
+        std::ifstream fs_(pose_file);
+        if(!fs_.is_open()) {
+            std::cout << "open error!" << std::endl;
+        }
+        char buf[1000];
+        char unit_buf[100];
+        while(fs_.getline(buf, 1000)) {
+            if (fs_.eof()) {
+                break;
+            }
+            std::vector<float> line_nums;
+            std::stringstream ss(buf);
+            while(ss.getline(unit_buf, 100, 32U)) {
+                std::stringstream ss_(unit_buf);
+                float num;
+                ss_ >> num;
+                line_nums.emplace_back(num);
+            }
+            line_nums.emplace_back(0.0f);
+            line_nums.emplace_back(0.0f);
+            line_nums.emplace_back(0.0f);
+            line_nums.emplace_back(1.0f);
+            assert(line_nums.size() == 16);
+            Eigen::Matrix4f mat(line_nums.data());
+            auto mat_t = mat.transpose();
+            result.emplace_back(mat_t);
+        }
+        return result;
+    }
+
+
+    static std::map<std::string, Eigen::Matrix4f> load_calib_file(std::string calib_file) {
+        std::map<std::string, Eigen::Matrix4f> res;
+
+        std::vector<Eigen::Matrix4f> result;
+        std::ifstream fs_(calib_file);
+        if(!fs_.is_open()) {
+            std::cout << "open error!" << std::endl;
+        }
+        char buf[1000];
+        char unit_buf[100];
+        while(fs_.getline(buf, 1000)) {
+            if (fs_.eof()) {
+                break;
+            }
+            std::vector<float> line_nums;
+            auto key = std::string(buf, 2);
+            std::stringstream ss(buf + 4);
+            while(ss.getline(unit_buf, 100, 32U)) {
+                std::stringstream ss_(unit_buf);
+                float num;
+                ss_ >> num;
+                line_nums.emplace_back(num);
+            }
+            line_nums.emplace_back(0.0f);
+            line_nums.emplace_back(0.0f);
+            line_nums.emplace_back(0.0f);
+            line_nums.emplace_back(1.0f);
+            assert(line_nums.size() == 16);
+            Eigen::Matrix4f mat(line_nums.data());
+            auto mat_t = mat.transpose();
+            res[key] = mat_t;
+        }
+        return res;
+    }
 };
 
 

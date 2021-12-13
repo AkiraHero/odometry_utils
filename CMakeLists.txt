@@ -6,10 +6,14 @@ set(CMAKE_CXX_STANDARD 14)
 find_package(PCL REQUIRED)
 find_package(OpenCV 3.4.13 EXACT REQUIRED PATHS /home/xlju/software/opencv-3.4.13/install
         )
+find_package(
+        Eigen3 REQUIRED
+)
 
 
 include_directories(.
         ${PCL_INCLUDE_DIRS}
+        ${EIGEN3_INCLUDE_DIR}
         ${OpenCV_INCLUDE_DIRS})
 
 #add_library(
@@ -49,5 +53,27 @@ add_executable(gen_sticky_pillar_data
 )
 target_link_libraries(
         gen_sticky_pillar_data
+        ${LIBS}
+)
+
+add_executable(test_pose_file_reading
+        unittest/test_posefile_reading.cpp
+        )
+
+add_executable(test_pcl_transform
+        unittest/test_pcl_transform.cpp
+        )
+
+target_link_libraries(
+        test_pcl_transform
+        ${LIBS}
+)
+
+add_executable(
+        test_gen_pillar_correspondence
+        unittest/test_generate_pillar_correspondence.cpp
+)
+target_link_libraries(
+        test_gen_pillar_correspondence
         ${LIBS}
 )

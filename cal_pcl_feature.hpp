@@ -10,6 +10,8 @@
 #include <pcl/point_types.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/registration/transforms.h>
+#include <Eigen/Core>
 
 double MINIMUM_RANGE = 5;
 int N_SCANS = 64;
@@ -177,7 +179,6 @@ std::map<std::string, pcl::PointCloud<PointType>::Ptr>
     std::vector<int> scanStartInd(N_SCANS, 0);
     std::vector<int> scanEndInd(N_SCANS, 0);
     int cloudSize = valid_count;
-    printf("points size %d \n", cloudSize);
 
     pcl::PointCloud<PointType>::Ptr laserCloud(new pcl::PointCloud<PointType>());
     for (int i = 0; i < N_SCANS; i++)
@@ -411,18 +412,18 @@ void calculate_pillars(pcl::PointCloud<pcl::PointXYZI>::Ptr p_cloud, std::vector
             }
         }
         indices_all.emplace_back(filtered_indices);
-        std::cout << "pillar pt num:" << filtered_indices.size() << std::endl;
+//        std::cout << "pillar pt num:" << filtered_indices.size() << std::endl;
     }
     indices_result =  std::move(indices_all);
 }
 
 
-std::vector<std::vector<std::vector<double>>> cal_pillar_stacked_feature(std::vector<PointType> const &key_points,
+std::vector<std::vector<std::vector<float>>> cal_pillar_stacked_feature(std::vector<PointType> const &key_points,
                                  std::vector<std::vector<int>>const & pilliar_indices,
                                  pcl::PointCloud<pcl::PointXYZI>::Ptr p_cloud
                                  ) {
     assert(key_points.size() == pilliar_indices.size());
-    std::vector<std::vector<std::vector<double>>> pilliar_feature_list;
+    std::vector<std::vector<std::vector<float>>> pilliar_feature_list;
     for (int i = 0; i != key_points.size(); i++) {
         auto key_point = key_points[i];
         auto pilliar_index = pilliar_indices[i];
@@ -439,10 +440,10 @@ std::vector<std::vector<std::vector<double>>> cal_pillar_stacked_feature(std::ve
         gravity_center.y /= pilliar_index.size();
         gravity_center.z /= pilliar_index.size();
 
-        std::vector<std::vector<double>> pilliar_feature;
+        std::vector<std::vector<float>> pilliar_feature;
         for(auto pilliar_ele: pilliar_index) {
             auto pilliar_point = p_cloud->points[pilliar_ele];
-            std::vector<double> feat_ele(3 + 1 + 3 + 1 + 3, 0);
+            std::vector<float> feat_ele(3 + 1 + 3 + 1 + 3, 0);
             feat_ele[0] = pilliar_point.x;
             feat_ele[1] = pilliar_point.y;
             feat_ele[2] = pilliar_point.z;
@@ -462,16 +463,18 @@ std::vector<std::vector<std::vector<double>>> cal_pillar_stacked_feature(std::ve
     return pilliar_feature_list;
 }
 
-std::vector<std::vector<std::vector<double>>> get_data_for_sticky_pillar(pcl::PointCloud<pcl::PointXYZI>::Ptr p_cloud) {
+std::vector<std::vector<std::vector<float>>> get_data_for_sticky_pillar(pcl::PointCloud<pcl::PointXYZI>::Ptr p_cloud,
+                                                                        std::vector<PointType> &selected_pts_result
+) {
 
     std::vector<pcl::PointCloud<PointType>> finalLaserCloudScans;
     int valid_pt_num{0};
     split_pointcloud2scans(p_cloud, finalLaserCloudScans, valid_pt_num);
     auto res_map = cal_pointcloud_smoothness(finalLaserCloudScans, valid_pt_num);
-    for (auto const&c: res_map) {
-
-        std::cout << c.first << ":" << c.second->points.size() << std::endl;
-    }
+//    for (auto const&c: res_map) {
+//
+//        std::cout << c.first << ":" << c.second->points.size() << std::endl;
+//    }
     int sample_num = 250;
     int pillar_capacity = 128;
     float pillar_dis_threshold = 0.5f;
@@ -490,5 +493,33 @@ std::vector<std::vector<std::vector<double>>> get_data_for_sticky_pillar(pcl::Po
     std::vector<std::vector<int>> pillar_pt_indices_result;
     calculate_pillars(p_cloud, selected_pts, pillar_capacity, pillar_dis_threshold, pillar_pt_indices_result);
     auto pilliar_feature_list = cal_pillar_stacked_feature(selected_pts, pillar_pt_indices_result, p_cloud);
+    selected_pts_result = std::move(selected_pts);
     return pilliar_feature_list;
+}
+
+// relpose to trans pt2 to coordinate of pt1
+Eigen::MatrixXf get_pillar_matching_gt(pcl::PointCloud<pcl::PointXYZ>::Ptr  pt_cloud_1,
+                                       pcl::PointCloud<pcl::PointXYZ>::Ptr  pt_cloud_2,
+                            Eigen::Matrix4f rel_pose,
+                            float radius) {
+
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr  pt_cloud_2_t(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::transformPointCloud(*pt_cloud_2, *pt_cloud_2_t, rel_pose);
+
+    pcl::KdTreeFLANN<pcl::PointXYZ>::Ptr p_kdtree(new pcl::KdTreeFLANN<pcl::PointXYZ>());
+    p_kdtree->setInputCloud(pt_cloud_1);
+
+    Eigen::MatrixXf matching_matrix;
+    matching_matrix.resize(pt_cloud_1->points.size(), pt_cloud_2->points.size());
+    matching_matrix.setConstant(std::numeric_limits<float>::infinity());
+    for (int index_2 = 0; index_2 != pt_cloud_2_t->points.size(); index_2++) {
+        std::vector<int> indices_1;
+        std::vector<float> sqr_dis;
+        p_kdtree->radiusSearch(pt_cloud_2_t->points[index_2], radius, indices_1, sqr_dis);
+        for (int i = 0; i != indices_1.size(); i++) {
+            matching_matrix(i, index_2) = sqr_dis[i];
+        }
+    }
+    return matching_matrix;
 }

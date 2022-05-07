@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.19)
 project(odometry_utils C CXX)
 
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_BUILD_TYPE "Release")
 
 find_package(PCL REQUIRED)
-find_package(OpenCV 3.4.13 EXACT REQUIRED PATHS /home/xlju/software/opencv-3.4.13/install
+find_package(OpenCV 3.4 EXACT REQUIRED PATHS /home/PJLAB/juxiaoliang/software/opencv-3.4.0/install
         )
 find_package(
         Eigen3 REQUIRED

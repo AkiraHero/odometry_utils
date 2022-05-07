@@ -125,6 +125,9 @@ void cal_normal_lonet(Eigen::MatrixXf const&x, Eigen::MatrixXf const&y, Eigen::M
     Eigen::ArrayXXf norm_x, norm_y, norm_z;
     auto rows = x.rows();
     auto cols = x.cols();
+    norm_x.setZero();
+    norm_y.setZero();
+    norm_z.setOnes();
     norm_x.resize(rows, cols);
     norm_y.resize(rows, cols);
     norm_z.resize(rows, cols);
@@ -159,7 +162,7 @@ void cal_normal_lonet(Eigen::MatrixXf const&x, Eigen::MatrixXf const&y, Eigen::M
     auto n_x_ = (neighbour_nx[0] + neighbour_nx[1] + neighbour_nx[2] + neighbour_nx[3]).array();
     auto n_y_  = (neighbour_ny[0] + neighbour_ny[1] + neighbour_ny[2] + neighbour_ny[3]).array();
     auto n_z_  = (neighbour_nz[0] + neighbour_nz[1] + neighbour_nz[2] + neighbour_nz[3]).array();
-    auto mod_ = Eigen::sqrt(n_x_ * n_x_ + n_y_ * n_y_ + n_z_ * n_z_);
+    auto mod_ = Eigen::sqrt(n_x_ * n_x_ + n_y_ * n_y_ + n_z_ * n_z_) + 1e-12; // avoid dividing zero
     n_x = (n_x_ / mod_).matrix();
     n_y = (n_y_ / mod_).matrix();
     n_z = (n_z_ / mod_).matrix();
@@ -171,7 +174,7 @@ void cal_normal_lonet(Eigen::MatrixXf const&x, Eigen::MatrixXf const&y, Eigen::M
 
 
 
-std::map<std::string, Eigen::MatrixXf> generate_range_img(pcl::PointCloud<pcl::PointXYZI>::Ptr p_pcl) {
+std::map<std::string, Eigen::MatrixXf> generate_range_img(pcl::PointCloud<pcl::PointXYZI>::Ptr p_pcl, float max_range=120.0) {
 //    auto st1 = std::chrono::high_resolution_clock().now();
     std::map<std::string, Eigen::MatrixXf> res;
     Eigen::MatrixXf mat_r; mat_r.resize(H, W); mat_r.setZero();
@@ -203,11 +206,17 @@ std::map<std::string, Eigen::MatrixXf> generate_range_img(pcl::PointCloud<pcl::P
         if(coordinate.second < 0 || coordinate.second >= W)
             continue;
         mat_inx(coordinate.first, coordinate.second) = 1;
+
+        float r = sqrt(c.x * c.x + c.y * c.y + c.z * c.z);
+        if (r > max_range) {
+            r = 0.0f;
+            c.x = c.y = c.z = c.intensity = 0.0f;
+        }
         mat_x(coordinate.first, coordinate.second) = c.x;
         mat_y(coordinate.first, coordinate.second) = c.y;
         mat_z(coordinate.first, coordinate.second) = c.z;
         mat_i(coordinate.first, coordinate.second) = c.intensity;
-        mat_r(coordinate.first, coordinate.second) = sqrt(c.x * c.x + c.y * c.y + c.z * c.z);
+        mat_r(coordinate.first, coordinate.second) = r;
     }
 //    auto st3 = std::chrono::high_resolution_clock().now();
 

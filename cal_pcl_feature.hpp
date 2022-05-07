@@ -90,6 +90,7 @@ void split_pointcloud2scans(pcl::PointCloud<pcl::PointXYZI>::Ptr ptr, std::vecto
         point.x = laserCloudIn.points[i].x;
         point.y = laserCloudIn.points[i].y;
         point.z = laserCloudIn.points[i].z;
+        point.intensity = laserCloudIn.points[i].intensity;
 
         float angle = atan(point.z / sqrt(point.x * point.x + point.y * point.y)) * 180.0f / M_PI;
         int scanID = 0;
@@ -165,7 +166,8 @@ void split_pointcloud2scans(pcl::PointCloud<pcl::PointXYZI>::Ptr ptr, std::vecto
         }
 
         float relTime = (ori - startOri) / (endOri - startOri);
-        point.intensity = scanID + scanPeriod * relTime;
+
+//        point.intensity = scanID + scanPeriod * relTime;
         laserCloudScans[scanID].push_back(point);
     }
     finalLaserCloudScans = std::move(laserCloudScans);
@@ -482,14 +484,26 @@ std::vector<std::vector<std::vector<float>>> get_data_for_sticky_pillar(pcl::Poi
     assert(res_map["surfPointsFlat"]->points.size() > sample_num);
     std::vector<PointType> selected_pts;
 
-    for (int i = 0; i != sample_num; i++) {
+    std::vector<bool> selected_cornerPointsSharp(res_map["cornerPointsSharp"]->points.size(), 0);
+    while (selected_pts.size() != sample_num) {
         int inx = rand() % res_map["cornerPointsSharp"]->points.size();
+        if(selected_cornerPointsSharp[inx]) {
+            continue;
+        }
+        selected_cornerPointsSharp[inx] = true;
         selected_pts.emplace_back(res_map["cornerPointsSharp"]->points[inx]);
     }
-    for (int i = 0; i != sample_num; i++) {
+
+    std::vector<bool> selected_surfPointsFlat(res_map["surfPointsFlat"]->points.size(), 0);
+    while (selected_pts.size() != sample_num) {
         int inx = rand() % res_map["surfPointsFlat"]->points.size();
+        if(selected_surfPointsFlat[inx]) {
+            continue;
+        }
+        selected_surfPointsFlat[inx] = true;
         selected_pts.emplace_back(res_map["surfPointsFlat"]->points[inx]);
     }
+
     std::vector<std::vector<int>> pillar_pt_indices_result;
     calculate_pillars(p_cloud, selected_pts, pillar_capacity, pillar_dis_threshold, pillar_pt_indices_result);
     auto pilliar_feature_list = cal_pillar_stacked_feature(selected_pts, pillar_pt_indices_result, p_cloud);

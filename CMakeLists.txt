@@ -77,3 +77,30 @@ target_link_libraries(
         test_gen_pillar_correspondence
         ${LIBS}
 )
+
+add_executable(test_generate_lo_net_feature
+        unittest/test_generate_lo_net_feature.cpp
+)
+
+target_link_libraries(
+        test_generate_lo_net_feature
+        ${LIBS}
+)
+
+add_executable(test_neighbour_generator
+        unittest/test_neighbour_generator.cpp
+        )
+
+target_link_libraries(
+        test_neighbour_generator
+        ${LIBS}
+)
+
+add_executable(test_range_img
+        unittest/test_range_img.cpp
+        )
+
+target_link_libraries(
+        test_range_img
+        ${LIBS}
+)

@@ -10,8 +10,8 @@ int main() {
     std::string tst_file = "/home/xlju/data/kitti_odometry/dataset/sequences/00/velodyne/000000.bin";
     auto buf = helper.read_frm(tst_file);
     auto ptr = helper.buffer2cloud(buf);
-    auto data_results = get_data_for_sticky_pillar(ptr);
-
+    std::vector<pcl::PointXYZI> pillar_key_points;
+    auto data_results = get_data_for_sticky_pillar(ptr, pillar_key_points);
     return 0;
 }
 

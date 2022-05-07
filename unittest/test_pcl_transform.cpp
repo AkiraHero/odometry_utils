@@ -15,8 +15,8 @@
 // kitti pose is in camera coordinate....
 
 int main() {
-    std::string pcl_1_file("/home/xlju/data/kitti_odometry/dataset/sequences/00/velodyne/000010.bin");
-    std::string pcl_2_file("/home/xlju/data/kitti_odometry/dataset/sequences/00/velodyne/000013.bin");
+    std::string pcl_1_file("/home/xlju/data/kitti_odometry/dataset/sequences/00/velodyne/000000.bin");
+    std::string pcl_2_file("/home/xlju/data/kitti_odometry/dataset/sequences/00/velodyne/000003.bin");
     std::string pose_file_name = "/home/xlju/data/kitti_odometry/dataset/poses/00.txt";
     std::string calib_file = "/home/xlju/data/kitti_odometry/dataset/sequences/00/calib.txt";
     auto helper = KittiHelper();
@@ -26,8 +26,8 @@ int main() {
     std::cout << calib_results["Tr"] << std::endl;
 
     auto lidar2camera = calib_results["Tr"];
-    auto pose_1 = pose_results[10];
-    auto pose_2 = pose_results[13];
+    auto pose_1 = pose_results[0];
+    auto pose_2 = pose_results[3];
     auto rel_pose = lidar2camera.inverse() * (pose_1.inverse() * pose_2) * lidar2camera;
 
 

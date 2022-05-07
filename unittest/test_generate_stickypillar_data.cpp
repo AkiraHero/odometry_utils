@@ -24,7 +24,7 @@ int main() {
     int squence_inx = 0;
     char squence_path[100];
     char file_name[100];
-    std::string output_path = "/home/xlju/data/kitti_odometry/baseline_data/stickypillar/";
+    std::string output_path = "/home/xlju/data/kitti_odometry/baseline_data/hh/";
 
     while(true) {
         sprintf(squence_path, "/home/xlju/data/kitti_odometry/dataset/sequences/%02d/velodyne/", squence_inx);
@@ -90,6 +90,9 @@ int main() {
                 auto const &c = data_results[i];
                 int feature_num = c.size();
                 ofs_.write(reinterpret_cast<char*>(&feature_num), sizeof(int));
+                std::cout << "sizeof(float)" << sizeof(float) << std::endl;
+                std::cout << "sizeof(int)" << sizeof(int) << std::endl;
+
                 for(auto const& ff: c) {
                     ofs_.write(reinterpret_cast<const char*>(ff.data()), sizeof(float) * ff.size());
                 }

@@ -6,6 +6,7 @@
 #include "boost/filesystem.hpp"
 #include "opencv2/opencv.hpp"
 #include <opencv2/core/eigen.hpp>
+#include <thread>
 // binary format
 // int H
 // int W
@@ -19,12 +20,14 @@
 // float[] H * W (ny)
 // float[] H * W (nz)
 
-int main() {
+int main(int argc, char** argv) {
+    assert(argc == 2);
     auto helper = KittiHelper();
-    int squence_inx = 0;
+    int squence_inx = atoi(argv[1]);
     char squence_path[100];
     char file_name[100];
-    std::string output_path = "/data/LONet_data/";
+
+    std::string output_path = "/data/tst/";
 
     while(true) {
         sprintf(squence_path, "/data/dataset/sequences/%02d/velodyne/", squence_inx);
@@ -52,6 +55,8 @@ int main() {
                 boost::filesystem::create_directories(output_path + out_sub_dir);
                 sprintf(out_sub_dir, "%02d/normal/", squence_inx);;
                 boost::filesystem::create_directories(output_path + out_sub_dir);
+                sprintf(out_sub_dir, "%02d/xyz/", squence_inx);;
+                boost::filesystem::create_directories(output_path + out_sub_dir);
                 sprintf(out_sub_dir, "%02d/", squence_inx);;
             }
 
@@ -61,78 +66,87 @@ int main() {
             char outfile_img[100];
             sprintf(outfile_img, "%06d.png", frm_index);
 
-
-//            auto outfile_feat_path = output_path + out_sub_dir + outfile_feat;
-//            std::ofstream ofs_(outfile_feat_path, std::ios_base::binary);
-//            if(!ofs_.is_open()) {
-//                std::cout << "Cannot open file to write!" << std::endl;
-//                return -1;
-//            }
             int height = range_img_map["mat_x"].rows();
             int width = range_img_map["mat_x"].cols();
-//            int channels = range_img_map.size();
-//            ofs_.write(reinterpret_cast<char*>(&height), sizeof(int));
-//            ofs_.write(reinterpret_cast<char*>(&width), sizeof(int));
-//            ofs_.write(reinterpret_cast<char*>(&channels), sizeof(int));
-//            std::vector<std::string> keys = {
-//                    "mat_x",
-//                    "mat_y",
-//                    "mat_z",
-//                    "mat_i",
-//                    "mat_r",
-//                    "mat_nx",
-//                    "mat_ny",
-//                    "mat_nz"
-//            };
-            // process range and intensity
-            auto const &mat_r = range_img_map["mat_r"];
+
+            // process coordinate x,y,z
+            auto const &mat_x = range_img_map["mat_x"];
+            auto const &mat_y = range_img_map["mat_y"];
+            auto const &mat_z = range_img_map["mat_z"];
             float resolution = 0.002;
             assert(sizeof(ushort) == 2);
-            Eigen::Matrix<ushort, Eigen::Dynamic, Eigen::Dynamic> new_mat = (mat_r / resolution).cast<ushort>();
-            cv::Mat cvmat = cv::Mat::zeros(height, width, CV_16U);
-            cv::eigen2cv(new_mat, cvmat);
-            cv::Mat cvmat_r(height, width, CV_8UC2, cvmat.data);
+            Eigen::Matrix<ushort, Eigen::Dynamic, Eigen::Dynamic> new_mat_x = (mat_x / resolution).cast<ushort>();
+            Eigen::Matrix<ushort, Eigen::Dynamic, Eigen::Dynamic> new_mat_y = (mat_y / resolution).cast<ushort>();
+            Eigen::Matrix<ushort, Eigen::Dynamic, Eigen::Dynamic> new_mat_z = (mat_z / resolution).cast<ushort>();
 
-            auto const &mat_i = range_img_map["mat_i"];
-            Eigen::Matrix<uchar , Eigen::Dynamic, Eigen::Dynamic> new_mat_i = mat_i.cast<uchar>();
-            cv::Mat cvmat_i = cv::Mat::zeros(height, width, CV_8U);
-            cv::eigen2cv(new_mat_i, cvmat_i);
+            cv::Mat cvmat_x = cv::Mat::zeros(height, width, CV_16U);
+            cv::Mat cvmat_y = cv::Mat::zeros(height, width, CV_16U);
+            cv::Mat cvmat_z = cv::Mat::zeros(height, width, CV_16U);
+            cv::eigen2cv(new_mat_x, cvmat_x);
+            cv::eigen2cv(new_mat_y, cvmat_y);
+            cv::eigen2cv(new_mat_z, cvmat_z);
 
             std::vector<cv::Mat> tmp;
-            tmp.push_back(cvmat_r);
-            tmp.push_back(cvmat_i);
-            cv::Mat cvmat_ri;
-            cv::merge(tmp, cvmat_ri);
+            tmp.push_back(cvmat_x);
+            tmp.push_back(cvmat_y);
+            tmp.push_back(cvmat_z);
+            cv::Mat cvmat_xyz;
+            cv::merge(tmp, cvmat_xyz);
 
-            auto img_file_ri = output_path + out_sub_dir + "/range_intensity/" + outfile_img;
-            cv::imwrite(img_file_ri, cvmat_ri);
+            auto img_file_xyz = output_path + out_sub_dir + "/xyz/" + outfile_img;
+            cv::imwrite(img_file_xyz, cvmat_xyz);
 
-            // process nx.ny.nz
 
-            auto const &mat_nx = range_img_map["mat_nx"];
-            auto const &mat_ny = range_img_map["mat_ny"];
-            auto const &mat_nz = range_img_map["mat_nz"];
-            cv::Mat cvmat_nx = cv::Mat::zeros(height, width, CV_32F);
-            cv::Mat cvmat_ny = cv::Mat::zeros(height, width, CV_32F);
-            cv::Mat cvmat_nz = cv::Mat::zeros(height, width, CV_32F);
-            cv::eigen2cv(mat_nx, cvmat_nx);
-            cv::eigen2cv(mat_ny, cvmat_ny);
-            cv::eigen2cv(mat_nz, cvmat_nz);
-            tmp.clear();
-            tmp.push_back(cvmat_nx);
-            tmp.push_back(cvmat_ny);
-            tmp.push_back(cvmat_nz);
-            cv::Mat cvmat_normal;
-            cv::merge(tmp, cvmat_normal);
-            cv::Mat cvmat_normal_255;
-            cvmat_normal.convertTo(cvmat_normal_255, CV_8UC3, 255);
-
-            auto img_file_normal = output_path + out_sub_dir + "/normal/" + outfile_img;
-            cv::imwrite(img_file_normal, cvmat_normal_255);
+//
+//            // process range and intensity
+//            auto const &mat_r = range_img_map["mat_r"];
+//            resolution = 0.002;
+//            assert(sizeof(ushort) == 2);
+//            Eigen::Matrix<ushort, Eigen::Dynamic, Eigen::Dynamic> new_mat = (mat_r / resolution).cast<ushort>();
+//            cv::Mat cvmat = cv::Mat::zeros(height, width, CV_16U);
+//            cv::eigen2cv(new_mat, cvmat);
+//            cv::Mat cvmat_r(height, width, CV_8UC2, cvmat.data);
+//
+//            Eigen::MatrixXf mat_i = range_img_map["mat_i"] * 255.0f; // kitti intensity \in [0, 1]
+//            Eigen::Matrix<uchar , Eigen::Dynamic, Eigen::Dynamic> new_mat_i = mat_i.cast<uchar>();
+//            cv::Mat cvmat_i = cv::Mat::zeros(height, width, CV_8U);
+//            cv::eigen2cv(new_mat_i, cvmat_i);
+//
+//            tmp.clear();
+//            tmp.push_back(cvmat_r);
+//            tmp.push_back(cvmat_i);
+//            cv::Mat cvmat_ri;
+//            cv::merge(tmp, cvmat_ri);
+//
+//            auto img_file_ri = output_path + out_sub_dir + "/range_intensity/" + outfile_img;
+//            cv::imwrite(img_file_ri, cvmat_ri);
+//
+//            // process nx.ny.nz
+//            auto const &mat_nx = range_img_map["mat_nx"];
+//            auto const &mat_ny = range_img_map["mat_ny"];
+//            auto const &mat_nz = range_img_map["mat_nz"];
+//            cv::Mat cvmat_nx = cv::Mat::zeros(height, width, CV_32F);
+//            cv::Mat cvmat_ny = cv::Mat::zeros(height, width, CV_32F);
+//            cv::Mat cvmat_nz = cv::Mat::zeros(height, width, CV_32F);
+//            cv::eigen2cv(mat_nx, cvmat_nx);
+//            cv::eigen2cv(mat_ny, cvmat_ny);
+//            cv::eigen2cv(mat_nz, cvmat_nz);
+//            tmp.clear();
+//            tmp.push_back(cvmat_nx);
+//            tmp.push_back(cvmat_ny);
+//            tmp.push_back(cvmat_nz);
+//            cv::Mat cvmat_normal;
+//            cv::merge(tmp, cvmat_normal);
+//            cv::Mat cvmat_normal_255;
+//            cvmat_normal.convertTo(cvmat_normal_255, CV_8UC3, 255);
+//
+//            auto img_file_normal = output_path + out_sub_dir + "/normal/" + outfile_img;
+//            cv::imwrite(img_file_normal, cvmat_normal_255);
 
             frm_index += 1;
         }
-        squence_inx += 1;
+        break;
+//        squence_inx += 1;
     }
 
 }

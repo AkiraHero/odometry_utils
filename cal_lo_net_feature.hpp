@@ -197,7 +197,7 @@ std::map<std::string, Eigen::MatrixXf> generate_range_img(pcl::PointCloud<pcl::P
 //    ne.setRadiusSearch (0.5);
 //    ne.compute (*cloud_normals);
 
-
+    float range_max = 0.0f;
     for(int inx = 0; inx != p_pcl->points.size(); inx++) {
         auto c = p_pcl->points[inx];
         auto coordinate = get_img_inx(c);
@@ -217,7 +217,11 @@ std::map<std::string, Eigen::MatrixXf> generate_range_img(pcl::PointCloud<pcl::P
         mat_z(coordinate.first, coordinate.second) = c.z;
         mat_i(coordinate.first, coordinate.second) = c.intensity;
         mat_r(coordinate.first, coordinate.second) = r;
+        if (r > range_max)
+            range_max = r;
     }
+    std::cout << "range_max=" << range_max << std::endl;
+
 //    auto st3 = std::chrono::high_resolution_clock().now();
 
     // interpolate

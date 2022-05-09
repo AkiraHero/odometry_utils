@@ -13,7 +13,7 @@ int main() {
     int frm_inx = 0;
     char frm_file[100];
     while(1) {
-        std::string tst_file = "/home/xlju/data/kitti_odometry/dataset/sequences/00/velodyne/";
+        std::string tst_file = "/data/dataset/sequences/00/velodyne/";
         sprintf(frm_file, "%06d.bin", frm_inx);
         tst_file = tst_file + frm_file;
         std::cout << "reading file:" << tst_file << std::endl;

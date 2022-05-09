@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.19)
 project(odometry_utils C CXX)
 
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_BUILD_TYPE "Release")
+#set(CMAKE_BUILD_TYPE "Release")
 
 find_package(PCL REQUIRED)
 find_package(OpenCV 3.4 EXACT REQUIRED PATHS /home/PJLAB/juxiaoliang/software/opencv-3.4.0/install

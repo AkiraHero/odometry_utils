@@ -70,6 +70,11 @@ std::vector<Eigen::MatrixXf> get_neighbour_mat(Eigen::MatrixXf const&x) {
     x_bottom.resize(rows, cols);
     x_left.resize(rows, cols);
     x_right.resize(rows, cols);
+    x_top.setZero();
+    x_bottom.setZero();
+    x_left.setZero();
+    x_right.setZero();
+
 
     x_top.block(1, 0, x.rows() - 1, x.cols()) = x.block(0, 0, x.rows() - 1, x.cols());
     x_top.row(0) = x.row(0);
@@ -131,6 +136,9 @@ void cal_normal_lonet(Eigen::MatrixXf const&x, Eigen::MatrixXf const&y, Eigen::M
     norm_x.resize(rows, cols);
     norm_y.resize(rows, cols);
     norm_z.resize(rows, cols);
+    norm_x.setZero();
+    norm_y.setZero();
+    norm_z.setZero();
 
 
 //    auto st3 = std::chrono::high_resolution_clock().now();

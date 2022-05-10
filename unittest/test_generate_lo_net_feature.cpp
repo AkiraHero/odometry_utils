@@ -97,51 +97,51 @@ int main(int argc, char** argv) {
             cv::imwrite(img_file_xyz, cvmat_xyz);
 
 
-//
-//            // process range and intensity
-//            auto const &mat_r = range_img_map["mat_r"];
-//            resolution = 0.002;
-//            assert(sizeof(ushort) == 2);
-//            Eigen::Matrix<ushort, Eigen::Dynamic, Eigen::Dynamic> new_mat = (mat_r / resolution).cast<ushort>();
-//            cv::Mat cvmat = cv::Mat::zeros(height, width, CV_16U);
-//            cv::eigen2cv(new_mat, cvmat);
-//            cv::Mat cvmat_r(height, width, CV_8UC2, cvmat.data);
-//
-//            Eigen::MatrixXf mat_i = range_img_map["mat_i"] * 255.0f; // kitti intensity \in [0, 1]
-//            Eigen::Matrix<uchar , Eigen::Dynamic, Eigen::Dynamic> new_mat_i = mat_i.cast<uchar>();
-//            cv::Mat cvmat_i = cv::Mat::zeros(height, width, CV_8U);
-//            cv::eigen2cv(new_mat_i, cvmat_i);
-//
-//            tmp.clear();
-//            tmp.push_back(cvmat_r);
-//            tmp.push_back(cvmat_i);
-//            cv::Mat cvmat_ri;
-//            cv::merge(tmp, cvmat_ri);
-//
-//            auto img_file_ri = output_path + out_sub_dir + "/range_intensity/" + outfile_img;
-//            cv::imwrite(img_file_ri, cvmat_ri);
-//
-//            // process nx.ny.nz
-//            auto const &mat_nx = range_img_map["mat_nx"];
-//            auto const &mat_ny = range_img_map["mat_ny"];
-//            auto const &mat_nz = range_img_map["mat_nz"];
-//            cv::Mat cvmat_nx = cv::Mat::zeros(height, width, CV_32F);
-//            cv::Mat cvmat_ny = cv::Mat::zeros(height, width, CV_32F);
-//            cv::Mat cvmat_nz = cv::Mat::zeros(height, width, CV_32F);
-//            cv::eigen2cv(mat_nx, cvmat_nx);
-//            cv::eigen2cv(mat_ny, cvmat_ny);
-//            cv::eigen2cv(mat_nz, cvmat_nz);
-//            tmp.clear();
-//            tmp.push_back(cvmat_nx);
-//            tmp.push_back(cvmat_ny);
-//            tmp.push_back(cvmat_nz);
-//            cv::Mat cvmat_normal;
-//            cv::merge(tmp, cvmat_normal);
-//            cv::Mat cvmat_normal_255;
-//            cvmat_normal.convertTo(cvmat_normal_255, CV_8UC3, 255);
-//
-//            auto img_file_normal = output_path + out_sub_dir + "/normal/" + outfile_img;
-//            cv::imwrite(img_file_normal, cvmat_normal_255);
+
+            // process range and intensity
+            auto const &mat_r = range_img_map["mat_r"];
+            resolution = 0.002;
+            assert(sizeof(ushort) == 2);
+            Eigen::Matrix<ushort, Eigen::Dynamic, Eigen::Dynamic> new_mat = (mat_r / resolution).cast<ushort>();
+            cv::Mat cvmat = cv::Mat::zeros(height, width, CV_16U);
+            cv::eigen2cv(new_mat, cvmat);
+            cv::Mat cvmat_r(height, width, CV_8UC2, cvmat.data);
+
+            Eigen::MatrixXf mat_i = range_img_map["mat_i"] * 255.0f; // kitti intensity \in [0, 1]
+            Eigen::Matrix<uchar , Eigen::Dynamic, Eigen::Dynamic> new_mat_i = mat_i.cast<uchar>();
+            cv::Mat cvmat_i = cv::Mat::zeros(height, width, CV_8U);
+            cv::eigen2cv(new_mat_i, cvmat_i);
+
+            tmp.clear();
+            tmp.push_back(cvmat_r);
+            tmp.push_back(cvmat_i);
+            cv::Mat cvmat_ri;
+            cv::merge(tmp, cvmat_ri);
+
+            auto img_file_ri = output_path + out_sub_dir + "/range_intensity/" + outfile_img;
+            cv::imwrite(img_file_ri, cvmat_ri);
+
+            // process nx.ny.nz
+            auto const &mat_nx = range_img_map["mat_nx"];
+            auto const &mat_ny = range_img_map["mat_ny"];
+            auto const &mat_nz = range_img_map["mat_nz"];
+            cv::Mat cvmat_nx = cv::Mat::zeros(height, width, CV_32F);
+            cv::Mat cvmat_ny = cv::Mat::zeros(height, width, CV_32F);
+            cv::Mat cvmat_nz = cv::Mat::zeros(height, width, CV_32F);
+            cv::eigen2cv(mat_nx, cvmat_nx);
+            cv::eigen2cv(mat_ny, cvmat_ny);
+            cv::eigen2cv(mat_nz, cvmat_nz);
+            tmp.clear();
+            tmp.push_back(cvmat_nx);
+            tmp.push_back(cvmat_ny);
+            tmp.push_back(cvmat_nz);
+            cv::Mat cvmat_normal;
+            cv::merge(tmp, cvmat_normal);
+            cv::Mat cvmat_normal_255;
+            cvmat_normal.convertTo(cvmat_normal_255, CV_8UC3, 255);
+
+            auto img_file_normal = output_path + out_sub_dir + "/normal/" + outfile_img;
+            cv::imwrite(img_file_normal, cvmat_normal_255);
 
             frm_index += 1;
         }

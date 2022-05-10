@@ -288,5 +288,14 @@ std::map<std::string, Eigen::MatrixXf> generate_range_img(pcl::PointCloud<pcl::P
     res["mat_nx"] = mat_nx;
     res["mat_ny"] = mat_ny;
     res["mat_nz"] = mat_nz;
+
+    // check NaN/Inf
+    for(auto const&c: res) {
+        bool is_nan = Eigen::isnan(mat_nx.array()).any();
+        bool is_inf = Eigen::isinf(mat_nx.array()).any();
+        assert(is_inf == false);
+        assert(is_nan == false);
+    }
+
     return res;
 }

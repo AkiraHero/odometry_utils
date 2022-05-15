@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     char squence_path[100];
     char file_name[100];
 
-    std::string output_path = "/data/tst/";
+    std::string output_path = "/data/LONet_data/";
 
     while(true) {
         sprintf(squence_path, "/data/dataset/sequences/%02d/velodyne/", squence_inx);
@@ -128,9 +128,23 @@ int main(int argc, char** argv) {
             cv::Mat cvmat_nx = cv::Mat::zeros(height, width, CV_32F);
             cv::Mat cvmat_ny = cv::Mat::zeros(height, width, CV_32F);
             cv::Mat cvmat_nz = cv::Mat::zeros(height, width, CV_32F);
-            cv::eigen2cv(mat_nx, cvmat_nx);
-            cv::eigen2cv(mat_ny, cvmat_ny);
-            cv::eigen2cv(mat_nz, cvmat_nz);
+            // transfer [-1, 1] to [0, 1]
+            Eigen::MatrixXf mat_nx_normalized = mat_nx ;
+            mat_nx_normalized.array() += 1.f;
+            mat_nx_normalized.array() /= 2.0f;
+
+            Eigen::MatrixXf mat_ny_normalized = mat_ny ;
+            mat_ny_normalized.array() += 1.f;
+            mat_ny_normalized.array() /= 2.0f;
+
+            Eigen::MatrixXf mat_nz_normalized = mat_nz ;
+            mat_nz_normalized.array() += 1.f;
+            mat_nz_normalized.array() /= 2.0f;
+
+
+            cv::eigen2cv(mat_nx_normalized, cvmat_nx);
+            cv::eigen2cv(mat_ny_normalized, cvmat_ny);
+            cv::eigen2cv(mat_nz_normalized, cvmat_nz);
             tmp.clear();
             tmp.push_back(cvmat_nx);
             tmp.push_back(cvmat_ny);

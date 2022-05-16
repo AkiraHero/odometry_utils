@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
             auto const &mat_x = range_img_map["mat_x"];
             auto const &mat_y = range_img_map["mat_y"];
             auto const &mat_z = range_img_map["mat_z"];
-            float resolution = 0.002;
+            float resolution = 0.005;
             assert(sizeof(ushort) == 2);
             Eigen::Matrix<ushort, Eigen::Dynamic, Eigen::Dynamic> new_mat_x = (mat_x / resolution).cast<ushort>();
             Eigen::Matrix<ushort, Eigen::Dynamic, Eigen::Dynamic> new_mat_y = (mat_y / resolution).cast<ushort>();
